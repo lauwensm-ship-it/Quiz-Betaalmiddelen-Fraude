@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — H2 Betaalmiddelen & Fraude</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f2;color:#1a1a1a;min-height:100vh}
+  .shell{max-width:720px;margin:0 auto;padding:2rem 1.25rem 4rem}
+  .logo-bar{display:flex;align-items:center;gap:12px;margin-bottom:2rem}
+  .logo-tri{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:32px solid #1A4740}
+  .logo-text{font-size:13px;color:#5F5E5A;letter-spacing:0.04em}
+  .logo-text strong{color:#1A4740;display:block;font-size:15px}
+
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* LOGIN */
+  .login-card{background:#fff;border-radius:16px;border:0.5px solid #e0e0d8;padding:2rem}
+  .login-card h1{font-size:22px;font-weight:600;color:#1A4740;margin-bottom:4px}
+  .login-card p{font-size:14px;color:#888780;margin-bottom:1.5rem}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group label{font-size:12px;font-weight:500;color:#5F5E5A;text-transform:uppercase;letter-spacing:0.05em}
+  .form-group input,.form-group select{height:40px;padding:0 12px;border:1px solid #D3D1C7;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;transition:border-color 0.15s}
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:#006D6B}
+  .btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 20px;border-radius:8px;font-size:14px;font-family:inherit;cursor:pointer;transition:all 0.15s;border:1px solid #D3D1C7;background:#fff;color:#1a1a1a}
+  .btn:hover{background:#f5f5f2}
+  .btn.primary{background:#1A4740;color:#fff;border-color:#1A4740}
+  .btn.primary:hover{background:#006D6B;border-color:#006D6B}
+  .btn-row{display:flex;gap:10px;margin-top:1.5rem;flex-wrap:wrap}
+  .error-msg{font-size:13px;color:#A32D2D;margin-top:10px;display:none}
+
+  /* TIMER */
+  .timer-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;background:#fff;border-radius:10px;padding:10px 14px;border:0.5px solid #e0e0d8}
+  .timer-text{font-size:15px;font-weight:600;min-width:52px;color:#1A4740}
+  .timer-track{flex:1;height:6px;background:#f5f5f2;border-radius:4px;overflow:hidden}
+  .timer-fill{height:100%;background:#006D6B;border-radius:4px;transition:width 1s linear}
+  .timer-fill.warning{background:#BA7517}
+  .timer-fill.danger{background:#E24B4A}
+
+  /* PROGRESS */
+  .progress-bar{height:4px;background:#e0e0d8;border-radius:4px;margin-bottom:1.25rem;overflow:hidden}
+  .progress-fill{height:100%;background:#006D6B;border-radius:4px;transition:width 0.3s}
+
+  /* QUESTION */
+  .q-card{background:#fff;border-radius:16px;border:0.5px solid #e0e0d8;padding:1.5rem;margin-bottom:1rem}
+  .q-meta{font-size:12px;color:#888780;margin-bottom:8px}
+  .q-scenario{font-size:13px;color:#5F5E5A;font-style:italic;line-height:1.6;padding:10px 14px;background:#f5f5f2;border-left:3px solid #006D6B;border-radius:0 8px 8px 0;margin-bottom:1rem}
+  .q-text{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px;line-height:1.5}
+  .q-pts{font-size:12px;color:#006D6B;margin-bottom:1rem;font-weight:500}
+
+  /* MC options */
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid #D3D1C7;border-radius:10px;cursor:pointer;font-size:14px;color:#1a1a1a;transition:all 0.15s;line-height:1.5}
+  .option:hover{border-color:#006D6B;background:#f0faf8}
+  .option.selected{border-color:#006D6B;background:#E1F5EE}
+  .option input[type=radio]{accent-color:#006D6B;margin-top:3px;flex-shrink:0}
+
+  /* WNW */
+  .wnw-opts{display:flex;gap:12px;margin-top:8px}
+  .wnw-btn{flex:1;height:44px;border:1px solid #D3D1C7;border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;background:#fff;color:#1a1a1a;transition:all 0.15s;font-weight:500}
+  .wnw-btn:hover{background:#f5f5f2}
+  .wnw-btn.sel-waar{background:#EAF3DE;border-color:#3B6D11;color:#27500A}
+  .wnw-btn.sel-niet{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+
+  /* MATCH */
+  .match-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .match-col-title{font-size:11px;color:#888780;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;font-weight:500}
+  .match-item{padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:8px;border:1px solid #D3D1C7;cursor:pointer;transition:all 0.15s;line-height:1.4;color:#1a1a1a;background:#fff}
+  .match-item:hover{border-color:#006D6B;background:#f0faf8}
+  .match-item.sel{border-color:#006D6B;background:#E1F5EE}
+  .match-item.done{background:#EAF3DE;border-color:#3B6D11;color:#173404;cursor:default}
+  .match-item.right-done{background:#EAF3DE;border-color:#3B6D11;color:#173404;cursor:default}
+  .match-reset{font-size:12px;height:28px;margin-top:4px}
+
+  /* RANK */
+  .rank-items{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .rank-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #D3D1C7;border-radius:10px;background:#fff}
+  .rank-num{width:28px;height:28px;border-radius:50%;background:#1A4740;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+  .rank-sel{height:34px;padding:0 8px;border:1px solid #D3D1C7;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;width:80px;flex-shrink:0}
+  .rank-sel:focus{outline:none;border-color:#006D6B}
+  .rank-label{font-size:13px;color:#5F5E5A;flex:1;line-height:1.4}
+
+  /* NAV */
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
+  .nav-counter{font-size:13px;color:#888780}
+
+  /* RESULT */
+  .result-card{background:#fff;border-radius:16px;border:0.5px solid #e0e0d8;padding:2rem;text-align:center;margin-bottom:1.5rem}
+  .result-name{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+  .result-sub{font-size:13px;color:#888780;margin-bottom:1.5rem}
+  .result-score{font-size:48px;font-weight:700;color:#1A4740;margin-bottom:4px}
+  .result-max{font-size:15px;color:#888780;margin-bottom:12px}
+  .result-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:500;margin-bottom:1rem}
+  .badge-green{background:#EAF3DE;color:#27500A}
+  .badge-amber{background:#FAEEDA;color:#633806}
+  .badge-red{background:#FCEBEB;color:#791F1F}
+  .result-time{font-size:13px;color:#888780}
+
+  /* TEACHER */
+  .teacher-card{background:#fff;border-radius:16px;border:0.5px solid #e0e0d8;padding:1.5rem;margin-bottom:1rem}
+  .teacher-card h2{font-size:18px;font-weight:600;color:#1A4740;margin-bottom:1rem}
+  .pass-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+  .pass-row label{font-size:13px;color:#5F5E5A;white-space:nowrap}
+  .pass-input{height:36px;padding:0 10px;border:1px solid #D3D1C7;border-radius:8px;font-size:13px;width:160px;font-family:inherit}
+  .pass-input:focus{outline:none;border-color:#006D6B}
+  .pass-error{font-size:13px;color:#A32D2D;display:none}
+  .stats-row{display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap}
+  .stat-box{background:#f5f5f2;border-radius:10px;padding:12px 16px;text-align:center;flex:1;min-width:100px}
+  .stat-val{font-size:22px;font-weight:600;color:#1A4740}
+  .stat-lbl{font-size:12px;color:#888780;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:8px 10px;background:#f5f5f2;border-bottom:1px solid #e0e0d8;color:#5F5E5A;font-weight:500}
+  td{padding:8px 10px;border-bottom:0.5px solid #f0f0ec;color:#1a1a1a}
+  tr:hover td{background:#fafafa}
+  .score-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:500}
+  .t-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:10px}
+  .empty-msg{font-size:13px;color:#888780;text-align:center;padding:2rem 0}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="logo-bar">
+    <div style="display:flex;gap:4px;align-items:flex-end">
+      <div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid #1A4740"></div>
+      <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:14px solid #006D6B"></div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #F5C842"></div>
+    </div>
+    <div class="logo-text"><strong>MAVO — FEV</strong>Hoofdstuk 2 · Betaalmiddelen & Fraude</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login-screen" class="screen active">
+    <div class="login-card">
+      <h1>Quiz Betaalmiddelen & Fraude</h1>
+      <p>Vul je gegevens in om te starten. Je hebt 10 minuten.</p>
+      <div class="form-row">
+        <div class="form-group"><label>Voornaam</label><input id="inp-vn" type="text" placeholder="Voornaam" autocomplete="given-name"></div>
+        <div class="form-group"><label>Naam</label><input id="inp-nm" type="text" placeholder="Naam" autocomplete="family-name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Klas</label>
+          <select id="inp-kl">
+            <option value="">— Kies klas —</option>
+            <option>2A</option><option>2B</option><option>2C</option><option>2D</option>
+            <option>2E</option><option>2F</option><option>2G</option><option>2H</option>
+            <option>2I</option><option>2J</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Leerkracht</label>
+          <select id="inp-lk">
+            <option value="">— Kies leerkracht —</option>
+            <option>E. Lekens</option>
+            <option>M. Lauwens</option>
+          </select>
+        </div>
+      </div>
+      <div id="login-err" class="error-msg">Vul alle velden in voor je start.</div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="startQuiz()">&#9654; Start quiz</button>
+        <button class="btn" onclick="goTeacher()">&#128274; Leerkrachtenscherm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen" class="screen">
+    <div class="timer-bar">
+      <span>&#9200;</span>
+      <span class="timer-text" id="timer-text">10:00</span>
+      <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div id="q-container"></div>
+    <div class="nav-row">
+      <button class="btn" id="btn-prev" onclick="nav(-1)">&#8592; Vorige</button>
+      <span class="nav-counter" id="nav-cnt">1 / 16</span>
+      <button class="btn primary" id="btn-next" onclick="nav(1)">Volgende &#8594;</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-screen" class="screen">
+    <div class="result-card">
+      <p class="result-name" id="res-name"></p>
+      <p class="result-sub" id="res-sub"></p>
+      <p class="result-score" id="res-score"></p>
+      <p class="result-max" id="res-max"></p>
+      <div id="res-badge"></div>
+      <p class="result-time" id="res-time"></p>
+    </div>
+    <button class="btn primary" onclick="goHome()">&#8635; Nieuwe leerling</button>
+  </div>
+
+  <!-- TEACHER -->
+  <div id="teacher-screen" class="screen">
+    <div class="teacher-card">
+      <div class="t-header">
+        <h2>&#128274; Leerkrachtenscherm</h2>
+        <button class="btn" onclick="goHome()">&#8592; Terug</button>
+      </div>
+      <div class="pass-row">
+        <label>Toegangscode:</label>
+        <input class="pass-input" id="t-pass" type="password" placeholder="Wachtwoord" oninput="checkPass()">
+        <span class="pass-error" id="pass-err">Verkeerd wachtwoord.</span>
+      </div>
+      <div id="t-content" style="display:none">
+        <div class="stats-row" id="t-stats"></div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn" onclick="exportCSV()">&#8681; Exporteer CSV</button>
+        </div>
+        <table>
+          <thead><tr><th>Naam</th><th>Voornaam</th><th>Klas</th><th>Leerkracht</th><th>Score</th><th>Tijd</th><th>Datum</th></tr></thead>
+          <tbody id="t-body"></tbody>
+        </table>
+        <p class="empty-msg" id="t-empty" style="display:none">Nog geen resultaten beschikbaar.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PASS = "mavo2025";
+const MAX = 22;
+const SECS = 600;
+
+const Qs = [
+  {id:1,type:"mc",pts:1,
+   sc:"Jeroen heeft zijn loon van zijn vakantiejob ontvangen. Hij gaat naar de winkel en betaalt met zijn bankkaart. Het geld verdwijnt meteen van zijn rekening.",
+   txt:"Welk type kaart gebruikt Jeroen?",
+   opts:["Kredietkaart","Een kaart die alleen online werkt","Een kaart waarmee je achteraf betaalt","Een debetkaart"],cor:3},
+  {id:2,type:"mc",pts:1,
+   sc:"Mila koopt online nieuwe oortjes. Ze betaalt met een kaart maar het geld komt pas volgende maand van haar rekening af. Haar moeder waarschuwt haar dat ze voorzichtig moet zijn met uitgaven.",
+   txt:"Welk betaalmiddel gebruikt Mila?",
+   opts:["Debetkaart — geld gaat meteen van haar rekening","Kredietkaart — ze betaalt later, risico op te veel uitgeven","Overschrijving","Contant geld"],cor:1},
+  {id:3,type:"mc",pts:1,
+   sc:"Sepp krijgt een berichtje op zijn gsm: \"Je KBC-rekening is geblokkeerd! Klik hier om je gegevens te bevestigen: www.kbc-veilig.be\" Hij klikt op de link en vult zijn pincode in.",
+   txt:"Welk type fraude is dit?",
+   opts:["Datingfraude","Factuurfraude","Phishing","Geldezel"],cor:2},
+  {id:4,type:"mc",pts:1,
+   sc:"Dennis wil nieuwe voetbalschoenen kopen. Hij wil ze eerst passen en advies vragen aan een verkoper.",
+   txt:"Welk verkoopkanaal past het best bij Dennis zijn wens?",
+   opts:["Een onlinemarktplaats zoals 2dehands.be","Een webshop zoals Zalando","Een fysieke sportwinkel","Een automaat"],cor:2},
+  {id:5,type:"mc",pts:1,
+   sc:"Hamza wil goedkope AirPods kopen op een website die hij nog nooit gezien heeft. De prijs is veel lager dan normaal en er zijn geen reviews van andere kopers.",
+   txt:"Wat is het grootste risico voor Hamza?",
+   opts:["De levering duurt te lang","Hij kan niet met zijn debetkaart betalen","De AirPods zijn uitverkocht","De webshop is mogelijk niet betrouwbaar en Hamza krijgt niets of iets fout geleverd"],cor:3},
+  {id:6,type:"mc",pts:1,
+   sc:"Sarah wil een trui kopen. Ze wil thuis rustig vergelijken tussen verschillende winkels zonder zich te verplaatsen.",
+   txt:"Welk verkoopkanaal past het best bij Sarah?",
+   opts:["Een fysieke winkel","Een onlinewinkel","Een automaat","Een speciaalzaak"],cor:1},
+  {id:7,type:"mc",pts:1,
+   sc:"De ouders van Sepp kiezen altijd bewust waar ze iets kopen. Ze letten op de prijs, hoe ver ze moeten rijden en of ze goed geholpen worden.",
+   txt:"Welke factor speelt GEEN rol bij de keuze van een verkoopkanaal?",
+   opts:["Prijs","Bereikbaarheid","De kleur van de verpakking","Aangeboden service"],cor:2},
+  {id:8,type:"wnw",pts:1,
+   sc:"Mila krijgt een berichtje via Instagram van een onbekende: \"Hey! Ik heb jouw rekeningnummer nodig om €50 door te storten. Ik geef jou €10 als beloning.\" Mila geeft haar rekeningnummer en pincode door.",
+   txt:"Mila wordt nu een geldezel.",cor:"waar"},
+  {id:9,type:"wnw",pts:1,
+   sc:"Hamza werd geldezel zonder dat hij wist wat er echt gebeurde. Hij denkt dat hij niet gestraft kan worden omdat hij zelf ook bedrogen werd.",
+   txt:"Een geldezel is niet strafbaar omdat hij ook het slachtoffer is.",cor:"niet"},
+  {id:10,type:"wnw",pts:1,
+   sc:"Dennis betaalt contactloos met zijn debetkaart aan de kassa. Hij vraagt zich af of er een limiet is op het bedrag.",
+   txt:"Bij contactloos betalen met een debetkaart is er een maximumbedrag per transactie.",cor:"waar"},
+  {id:11,type:"wnw",pts:1,
+   sc:"Sarah wil iets bestellen op een website die ze niet kent. Haar vriendin zegt: \"Alle onlinewinkels zijn even betrouwbaar hoor!\"",
+   txt:"Niet alle onlinewinkels zijn even betrouwbaar.",cor:"waar"},
+  {id:12,type:"wnw",pts:1,
+   sc:"Jeroen wil een game kopen op een webshop. Hij wil betalen met de bankbiljetten die hij op zak heeft.",
+   txt:"Met contant geld kan je online aankopen betalen.",cor:"niet"},
+  {id:13,type:"wnw",pts:1,
+   sc:"Sepp ontvangt een verdacht berichtje en weet niet wat hij ermee moet doen.",
+   txt:"Verdachte berichten mag je doorsturen naar verdacht@safeonweb.be.",cor:"waar"},
+  {id:14,type:"match",pts:2,
+   txt:"Verbind elk geval met het juiste fraudetype.",
+   pairs:[
+     {l:"Sepp krijgt een nep-e-mail van zijn bank die vraagt om zijn pincode in te vullen",r:"Phishing"},
+     {l:"Mila geeft haar rekening door aan een onbekende om geld door te sluizen",r:"Geldezel"},
+     {l:"Jeroen chat weken met 'Emma' online, die hem daarna om geld vraagt",r:"Vriendschapsfraude"},
+     {l:"De ouders van Sarah krijgen een factuur met een ander rekeningnummer dan normaal",r:"Factuurfraude"}
+   ]},
+  {id:15,type:"match",pts:2,
+   txt:"Verbind elk betaalmiddel met het juiste kenmerk.",
+   pairs:[
+     {l:"Contant geld",r:"Altijd aanvaard, geen technologie nodig"},
+     {l:"Debetkaart",r:"Geld gaat meteen van je zichtrekening"},
+     {l:"Kredietkaart",r:"Je betaalt pas later, risico op te veel uitgeven"},
+     {l:"Overschrijving",r:"Je geeft zelf opdracht via je bankapp of computer"}
+   ]},
+  {id:16,type:"rank",pts:2,
+   sc:"Hamza merkt dat hij slachtoffer is van phishing. Zijn bankgegevens zijn gestolen.",
+   txt:"Zet de 3 stappen die Hamza nu moet ondernemen in de juiste volgorde.",
+   items:["Neem contact op met je bank om frauduleuze transacties te blokkeren","Doe aangifte bij de politie","Stuur het verdachte bericht door naar verdacht@safeonweb.be"],
+   cor:[1,2,3]}
+];
+
+let ans={}, cur=0, timer=null, secsLeft=SECS, student={}, results=[], ms={};
+
+function goHome(){
+  clearInterval(timer);
+  ['inp-vn','inp-nm'].forEach(id=>document.getElementById(id).value='');
+  ['inp-kl','inp-lk'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('t-pass').value='';
+  document.getElementById('t-content').style.display='none';
+  document.getElementById('pass-err').style.display='none';
+  show('login-screen');
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz(){
+  const vn=document.getElementById('inp-vn').value.trim();
+  const nm=document.getElementById('inp-nm').value.trim();
+  const kl=document.getElementById('inp-kl').value;
+  const lk=document.getElementById('inp-lk').value;
+  const err=document.getElementById('login-err');
+  if(!vn||!nm||!kl||!lk){err.style.display='block';return;}
+  err.style.display='none';
+  student={vn,nm,kl,lk,start:new Date()};
+  ans={};ms={};cur=0;secsLeft=SECS;
+  show('quiz-screen');
+  renderQ();
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    secsLeft--;updateTimer();
+    if(secsLeft<=0){clearInterval(timer);finish();}
+  },1000);
+}
+
+function updateTimer(){
+  const m=Math.floor(secsLeft/60),s=secsLeft%60;
+  document.getElementById('timer-text').textContent=m+':'+(s<10?'0':'')+s;
+  const pct=secsLeft/SECS*100;
+  const f=document.getElementById('timer-fill');
+  f.style.width=pct+'%';
+  f.className='timer-fill'+(pct<20?' danger':pct<40?' warning':'');
+}
+
+function renderQ(){
+  const q=Qs[cur],n=Qs.length;
+  document.getElementById('prog-fill').style.width=((cur+1)/n*100)+'%';
+  document.getElementById('nav-cnt').textContent=(cur+1)+' / '+n;
+  document.getElementById('btn-prev').style.visibility=cur===0?'hidden':'visible';
+  document.getElementById('btn-next').textContent=cur===n-1?'Indienen ✓':'Volgende →';
+  let h=`<div class="q-card"><p class="q-meta">Vraag ${cur+1} van ${n}</p>`;
+  if(q.sc) h+=`<p class="q-scenario">${q.sc}</p>`;
+  h+=`<p class="q-txt" style="font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px;line-height:1.5">${q.txt}</p>`;
+  h+=`<p style="font-size:12px;color:#006D6B;margin-bottom:1rem;font-weight:500">${q.pts} punt${q.pts>1?'en':''}</p>`;
+
+  if(q.type==='mc'){
+    h+=`<div class="options">`;
+    q.opts.forEach((o,i)=>h+=`<label class="option${ans[q.id]===i?' selected':''}"><input type="radio" name="q${q.id}" value="${i}" ${ans[q.id]===i?'checked':''} onchange="setMC(${q.id},${i},this.closest('.option'))">${o}</label>`);
+    h+=`</div>`;
+  } else if(q.type==='wnw'){
+    const a=ans[q.id];
+    h+=`<div class="wnw-opts">
+      <button class="wnw-btn ${a==='waar'?'sel-waar':''}" onclick="setWNW(${q.id},'waar',this)">✅ Waar</button>
+      <button class="wnw-btn ${a==='niet'?'sel-niet':''}" onclick="setWNW(${q.id},'niet',this)">❌ Niet waar</button>
+    </div>`;
+  } else if(q.type==='match'){
+    if(!ms[q.id]) ms[q.id]={p:{},sel:null};
+    const m=ms[q.id];
+    const ml=Object.keys(m.p).map(Number);
+    const mr=Object.values(m.p);
+    h+=`<div class="match-grid"><div><p class="match-col-title">Situatie / Betaalmiddel</p>`;
+    q.pairs.forEach((p,i)=>{
+      const done=ml.includes(i),isSel=m.sel===i;
+      h+=`<div class="match-item ${done?'done':isSel?'sel':''}" onclick="${done?'':'selLeft('+q.id+','+i+')'}">${done?'✓ ':''} ${p.l}</div>`;
+    });
+    h+=`</div><div><p class="match-col-title">Fraudetype / Kenmerk</p>`;
+    q.pairs.forEach((p,i)=>{
+      const done=mr.includes(p.r);
+      h+=`<div class="match-item ${done?'right-done':''}" onclick="${done?'':'selRight('+q.id+',\''+p.r.replace(/'/g,"\\'")+'\')'}">${p.r}${done?'<br><small style="color:#3B6D11">✓ Gekoppeld</small>':''}</div>`;
+    });
+    h+=`</div></div>`;
+    if(ml.length>0) h+=`<button class="btn match-reset" onclick="resetMatch(${q.id})">↺ Koppelingen wissen</button>`;
+    ans[q.id]=m.p;
+  } else if(q.type==='rank'){
+    const sv=ans[q.id]||{};
+    h+=`<div class="rank-items">`;
+    q.items.forEach((item,i)=>{
+      h+=`<div class="rank-row"><div class="rank-num">${i+1}</div>
+        <select class="rank-sel" onchange="setRank(${q.id},${i},this.value)">
+          <option value="">—</option>
+          ${q.items.map((_,j)=>`<option value="${j+1}" ${sv[i]==j+1?'selected':''}>${j+1}</option>`).join('')}
+        </select>
+        <span class="rank-label">${item}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+  document.getElementById('q-container').innerHTML=h;
+}
+
+function setMC(qid,val,el){ans[qid]=val;document.querySelectorAll(`[name="q${qid}"]`).forEach(r=>r.closest('.option').classList.toggle('selected',r.checked));}
+function setWNW(qid,val,btn){ans[qid]=val;btn.closest('.wnw-opts').querySelectorAll('.wnw-btn').forEach(b=>b.className='wnw-btn');btn.classList.add(val==='waar'?'sel-waar':'sel-niet');}
+function selLeft(qid,i){if(!ms[qid])ms[qid]={p:{},sel:null};ms[qid].sel=i;renderQ();}
+function selRight(qid,rv){if(!ms[qid]||ms[qid].sel===null)return;ms[qid].p[ms[qid].sel]=rv;ms[qid].sel=null;ans[qid]={...ms[qid].p};renderQ();}
+function resetMatch(qid){ms[qid]={p:{},sel:null};ans[qid]={};renderQ();}
+function setRank(qid,pos,val){if(!ans[qid])ans[qid]={};ans[qid][pos]=parseInt(val);}
+
+function nav(d){
+  if(d===1&&cur===Qs.length-1){finish();return;}
+  cur=Math.max(0,Math.min(Qs.length-1,cur+d));renderQ();
+}
+
+function calcScore(){
+  let s=0;
+  Qs.forEach(q=>{
+    const a=ans[q.id];
+    if(q.type==='mc'&&a===q.cor) s+=q.pts;
+    else if(q.type==='wnw'&&a===q.cor) s+=q.pts;
+    else if(q.type==='match'&&a&&typeof a==='object'){
+      let c=0;q.pairs.forEach((p,i)=>{if(a[i]===p.r)c++;});
+      if(c===q.pairs.length) s+=q.pts; else if(c>=q.pairs.length/2) s+=1;
+    } else if(q.type==='rank'&&a){
+      const ok=q.cor.every((_,i)=>a[i]===q.cor[i]);
+      if(ok) s+=q.pts; else{let c=0;q.cor.forEach((_,i)=>{if(a[i]===q.cor[i])c++;});if(c>0)s+=1;}
+    }
+  });
+  return s;
+}
+
+function finish(){
+  clearInterval(timer);
+  const score=calcScore();
+  const elapsed=SECS-secsLeft;
+  const m=Math.floor(elapsed/60),s=elapsed%60;
+  const timeStr=m+'m '+(s<10?'0':'')+s+'s';
+  const entry={nm:student.nm,vn:student.vn,kl:student.kl,lk:student.lk,score,max:MAX,tijd:timeStr,datum:new Date().toLocaleDateString('nl-BE')};
+  results.push(entry);
+  const pct=Math.round(score/MAX*100);
+  document.getElementById('res-name').textContent=student.vn+' '+student.nm;
+  document.getElementById('res-sub').textContent=student.kl+' — '+student.lk;
+  document.getElementById('res-score').textContent=score;
+  document.getElementById('res-max').textContent='/ '+MAX+' punten';
+  document.getElementById('res-badge').innerHTML=`<span class="result-badge ${pct>=70?'badge-green':pct>=50?'badge-amber':'badge-red'}">${pct}% — ${pct>=70?'Goed gedaan!':pct>=50?'Voldoende inspanning.':'Herhaal de leerstof.'}</span>`;
+  document.getElementById('res-time').textContent='Tijd: '+timeStr;
+  show('result-screen');
+}
+
+function goTeacher(){show('teacher-screen');}
+
+function checkPass(){
+  const v=document.getElementById('t-pass').value;
+  const err=document.getElementById('pass-err');
+  const cnt=document.getElementById('t-content');
+  if(v===PASS){err.style.display='none';cnt.style.display='block';renderTeacher();}
+  else if(v.length>=PASS.length){err.style.display='inline';cnt.style.display='none';}
+}
+
+function renderTeacher(){
+  const tbody=document.getElementById('t-body');
+  const empty=document.getElementById('t-empty');
+  const stats=document.getElementById('t-stats');
+  if(!results.length){tbody.innerHTML='';empty.style.display='block';stats.innerHTML='';return;}
+  empty.style.display='none';
+  const avg=(results.reduce((a,r)=>a+r.score,0)/results.length).toFixed(1);
+  const best=Math.max(...results.map(r=>r.score));
+  stats.innerHTML=`
+    <div class="stat-box"><div class="stat-val">${results.length}</div><div class="stat-lbl">Leerlingen</div></div>
+    <div class="stat-box"><div class="stat-val">${avg} / ${MAX}</div><div class="stat-lbl">Gemiddelde</div></div>
+    <div class="stat-box"><div class="stat-val">${best} / ${MAX}</div><div class="stat-lbl">Hoogste score</div></div>`;
+  tbody.innerHTML=results.map(r=>{
+    const pct=Math.round(r.score/r.max*100);
+    return `<tr><td>${r.nm}</td><td>${r.vn}</td><td>${r.kl}</td><td>${r.lk}</td>
+      <td><span class="score-badge ${pct>=70?'badge-green':pct>=50?'badge-amber':'badge-red'}">${r.score}/${r.max} (${pct}%)</span></td>
+      <td>${r.tijd}</td><td>${r.datum}</td></tr>`;
+  }).join('');
+}
+
+function exportCSV(){
+  const h='Naam,Voornaam,Klas,Leerkracht,Score,Max,Percentage,Tijd,Datum\n';
+  const rows=results.map(r=>`"${r.nm}","${r.vn}","${r.kl}","${r.lk}",${r.score},${r.max},${Math.round(r.score/r.max*100)}%,"${r.tijd}","${r.datum}"`).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));
+  a.download='quiz_resultaten_FEV_H2.csv';a.click();
+}
+</script>
+</body>
+</html>
