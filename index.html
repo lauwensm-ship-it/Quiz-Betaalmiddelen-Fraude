@@ -247,7 +247,7 @@ const SECS = 600;
 
 let Qs = [], MAX = 22;
 let ans = {}, cur = 0, timer = null, secsLeft = SECS;
-let student = {}, results = [], ms = {};
+let student = {}, results = [], ms = {}, shuffled = {};
 
 // Check of URL geconfigureerd is
 window.addEventListener('load', () => {
@@ -337,18 +337,28 @@ function renderQ() {
     </div>`;
   } else if (q.type === 'match') {
     if (!ms[q.id]) ms[q.id] = {p: {}, sel: null};
+    if (!shuffled[q.id]) {
+      const arr = q.pairs.map(p => p.r);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      shuffled[q.id] = arr;
+    }
     const m = ms[q.id];
     const ml = Object.keys(m.p).map(Number);
     const mr = Object.values(m.p);
+    const rightOrder = shuffled[q.id];
     h += `<div class="match-grid"><div><p class="match-col-title">Situatie / Betaalmiddel</p>`;
     q.pairs.forEach((p, i) => {
       const done = ml.includes(i), isSel = m.sel === i;
       h += `<div class="match-item ${done ? 'done' : isSel ? 'sel' : ''}" onclick="${done ? '' : 'selLeft(' + q.id + ',' + i + ')'}">${done ? '✓ ' : ''}${p.l}</div>`;
     });
     h += `</div><div><p class="match-col-title">Fraudetype / Kenmerk</p>`;
-    q.pairs.forEach((p) => {
-      const done = mr.includes(p.r);
-      h += `<div class="match-item ${done ? 'rdone' : ''}" onclick="${done ? '' : 'selRight(' + q.id + ',\'' + p.r.replace(/'/g, "\\'") + '\')'}">${p.r}${done ? '<br><small style="color:#3B6D11">✓ Gekoppeld</small>' : ''}</div>`;
+    rightOrder.forEach((r) => {
+      const done = mr.includes(r);
+      const rEsc = r.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      h += `<div class="match-item ${done ? 'rdone' : ''}" onclick="${done ? '' : 'selRight(' + q.id + ',\'' + rEsc + '\')'}">${r}${done ? '<br><small style="color:#3B6D11">✓ Gekoppeld</small>' : ''}</div>`;
     });
     h += `</div></div>`;
     if (ml.length > 0) h += `<button class="btn" style="font-size:12px;height:28px;margin-top:6px" onclick="resetMatch(${q.id})">↺ Koppelingen wissen</button>`;
