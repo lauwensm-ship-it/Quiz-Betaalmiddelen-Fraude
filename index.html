@@ -119,9 +119,7 @@
     <div class="logo-text"><strong>MAVO — FEV</strong>Hoofdstuk 2 · Betaalmiddelen & Fraude</div>
   </div>
 
-  <div id="config-notice" class="config-notice">
-    ⚠️ <strong>Configuratie nodig:</strong> Vervang <code>https://script.google.com/macros/s/AKfycbzU-OD96FdV5xDiDLJ2UZBmY28bG3bLkRbgR4JEylNrnQ3f8a8yOTmMgxnV4RfeK2ffkQ/exec</code> in de broncode door de URL van jouw Google Apps Script deployment.
-  </div>
+
 
   <!-- LOGIN -->
   <div id="login-screen" class="screen active">
@@ -239,7 +237,7 @@
 // ============================================================
 // !! VERVANG DEZE URL NA GOOGLE APPS SCRIPT DEPLOYMENT !!
 // ============================================================
-const SCRIPT_URL = "JOUW_SCRIPT_URL";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzU-OD96FdV5xDiDLJ2UZBmY28bG3bLkRbgR4JEylNrnQ3f8a8y0TmMgxnV4RfeK2ffkQ/exec";
 // ============================================================
 
 const PASS = "mavo2025";
@@ -249,12 +247,7 @@ let Qs = [], MAX = 22;
 let ans = {}, cur = 0, timer = null, secsLeft = SECS;
 let student = {}, results = [], ms = {}, shuffled = {};
 
-// Check of URL geconfigureerd is
-window.addEventListener('load', () => {
-  if (SCRIPT_URL === "JOUW_SCRIPT_URL") {
-    document.getElementById('config-notice').style.display = 'block';
-  }
-});
+
 
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
